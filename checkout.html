@@ -103,7 +103,7 @@
     resultArea.innerHTML = `<div class='alert alert-info mt-3'>🔄 กำลังค้นหาข้อมูล...</div>`;
 
     try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwdHkZMl4w-lgYFi_mMg41WBKLrwiYoiBkgUlo9hheo4k1ytEdWo6oTV_hB_oN93q-z/exec?plate=" + encodeURIComponent(plate));
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwZHJgvLWTylrOJt_wiF78ewOHWdf0YumfCmyArv-XMqXY7sCrIEAvtcF2tu5wh7hxQ/exec?plate=" + encodeURIComponent(plate));
       const data = await res.json();
 
       if (!data || !data.rowIndex) {
@@ -142,7 +142,7 @@
 
   async function confirmCheckout(rowIndex) {
     try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwdHkZMl4w-lgYFi_mMg41WBKLrwiYoiBkgUlo9hheo4k1ytEdWo6oTV_hB_oN93q-z/exec", {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwZHJgvLWTylrOJt_wiF78ewOHWdf0YumfCmyArv-XMqXY7sCrIEAvtcF2tu5wh7hxQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ action: "checkout", row: rowIndex })
