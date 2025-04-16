@@ -152,7 +152,7 @@
         statusMsg.innerHTML = `<div class="alert alert-info">📤 กำลังอัปโหลดข้อมูล...</div>`;
 
         try {
-          const res = await fetch("https://script.google.com/macros/s/AKfycbz65_-A329UbJHkRcotUC16USTZCaYtAcl5QlT8k2m33EDe7sDdme5sOV7jjvTr8ZpG/exec", {
+          const res = await fetch("https://script.google.com/macros/s/AKfycbwdHkZMl4w-lgYFi_mMg41WBKLrwiYoiBkgUlo9hheo4k1ytEdWo6oTV_hB_oN93q-z/exec", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: data.toString()
@@ -162,9 +162,11 @@
           statusMsg.innerHTML = `<div class='alert alert-${isError ? "danger" : "success"}'>${result}</div>`;
 
           if (!isError) {
+            successSound.currentTime = 0;
             successSound.play().catch(() => {});
             form.reset();
             otherPurpose.style.display = "none";
+            setTimeout(() => location.href = "dashboard.html", 2000);
           }
         } catch (err) {
           statusMsg.innerHTML = `<div class='alert alert-danger'>❌ การเชื่อมต่อผิดพลาด: ${err}</div>`;

@@ -86,85 +86,87 @@
     </div>
   </div>
 
-  <script>
-    const form = document.getElementById("checkoutForm");
-    const resultArea = document.getElementById("resultArea");
-    const successSound = document.getElementById("successSound");
+<script>
+  const form = document.getElementById("checkoutForm");
+  const resultArea = document.getElementById("resultArea");
+  const successSound = document.getElementById("successSound");
 
-    // ดึง query string จาก URL เช่น ?plate=กข1234
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
 
-    async function fetchAndFill(plate) {
-      if (!plate) return;
-      document.getElementById("searchPlate").value = plate;
+  async function fetchAndFill(plate) {
+    if (!plate) return;
+    document.getElementById("searchPlate").value = plate;
 
-      resultArea.innerHTML = `<div class='alert alert-info mt-3'>🔄 กำลังค้นหาข้อมูล...</div>`;
+    resultArea.innerHTML = `<div class='alert alert-info mt-3'>🔄 กำลังค้นหาข้อมูล...</div>`;
 
-      try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbz65_-A329UbJHkRcotUC16USTZCaYtAcl5QlT8k2m33EDe7sDdme5sOV7jjvTr8ZpG/exec?plate=" + encodeURIComponent(plate));
-        const data = await res.json();
+    try {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwdHkZMl4w-lgYFi_mMg41WBKLrwiYoiBkgUlo9hheo4k1ytEdWo6oTV_hB_oN93q-z/exec?plate=" + encodeURIComponent(plate));
+      const data = await res.json();
 
-        if (!data || !data.rowIndex) {
-          resultArea.innerHTML = `<div class='alert alert-danger mt-3'>❌ ไม่พบทะเบียนนี้หรือออกแล้ว</div>`;
-          return;
-        }
-
-        const dateObj = new Date(data.timeIn);
-        const dateStr = dateObj.toLocaleDateString("th-TH", {
-          year: "numeric", month: "short", day: "numeric"
-        });
-        const timeStr = dateObj.toLocaleTimeString("th-TH", {
-          hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
-        });
-        const formattedTimeIn = `${dateStr} เวลา ${timeStr}`;
-
-        resultArea.innerHTML = `
-          <div class='card-result mt-3 text-start'>
-            <h5>🚗 ทะเบียน: <strong>${data.plate}</strong></h5>
-            <p>🏠 บ้านเลขที่: ${data.house}<br>🎯 วัตถุประสงค์: ${data.purpose}<br>⏱️ เวลาเข้า: ${formattedTimeIn}</p>
-            <button class='btn btn-success w-100 mt-2' onclick='confirmCheckout(${data.rowIndex})'>✅ บันทึกเวลาออก</button>
-          </div>
-        `;
-      } catch (err) {
-        console.error(err);
-        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
+      if (!data || !data.rowIndex) {
+        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>❌ ไม่พบทะเบียนนี้หรือออกแล้ว</div>`;
+        return;
       }
+
+      const dateObj = new Date(data.timeIn);
+      const dateStr = dateObj.toLocaleDateString("th-TH", {
+        year: "numeric", month: "short", day: "numeric"
+      });
+      const timeStr = dateObj.toLocaleTimeString("th-TH", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+      });
+      const formattedTimeIn = `${dateStr} เวลา ${timeStr}`;
+
+      resultArea.innerHTML = `
+        <div class='card-result mt-3 text-start'>
+          <h5>🚗 ทะเบียน: <strong>${data.plate}</strong></h5>
+          <p>🏠 บ้านเลขที่: ${data.house}<br>🎯 วัตถุประสงค์: ${data.purpose}<br>⏱️ เวลาเข้า: ${formattedTimeIn}</p>
+          <button class='btn btn-success w-100 mt-2' onclick='confirmCheckout(${data.rowIndex})'>✅ บันทึกเวลาออก</button>
+        </div>
+      `;
+    } catch (err) {
+      console.error(err);
+      resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
     }
+  }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const plate = document.getElementById("searchPlate").value.trim();
-      if (!plate) return;
-      fetchAndFill(plate);
-    });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const plate = document.getElementById("searchPlate").value.trim();
+    if (!plate) return;
+    fetchAndFill(plate);
+  });
 
-    async function confirmCheckout(rowIndex) {
-      try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbz65_-A329UbJHkRcotUC16USTZCaYtAcl5QlT8k2m33EDe7sDdme5sOV7jjvTr8ZpG/exec", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ action: "checkout", row: rowIndex })
-        });
+  async function confirmCheckout(rowIndex) {
+    try {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwdHkZMl4w-lgYFi_mMg41WBKLrwiYoiBkgUlo9hheo4k1ytEdWo6oTV_hB_oN93q-z/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ action: "checkout", row: rowIndex })
+      });
 
-        const result = await res.text();
-        resultArea.innerHTML = `<div class='alert alert-success mt-3'>${result}</div>`;
+      const result = await res.text();
+      const isError = result.startsWith("🚫") || result.startsWith("เกิดข้อผิดพลาด");
 
-        successSound.play().catch(() => {
-          console.warn("ไม่สามารถเล่นเสียงแจ้งเตือนได้ (อาจถูกเบราว์เซอร์บล็อก)");
-        });
-      } catch (err) {
-        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
+      resultArea.innerHTML = `<div class='alert alert-${isError ? "danger" : "success"} mt-3'>${result}</div>`;
+
+      if (!isError) {
+        successSound.currentTime = 0;
+        successSound.play().catch(() => {});
+        setTimeout(() => location.href = "dashboard.html", 2000);
       }
+    } catch (err) {
+      resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
     }
+  }
 
-    // เรียกอัตโนมัติถ้ามีพารามิเตอร์ plate
-    const prefillPlate = getQueryParam("plate");
-    if (prefillPlate) {
-      fetchAndFill(prefillPlate);
-    }
-  </script>
+  const prefillPlate = getQueryParam("plate");
+  if (prefillPlate) {
+    fetchAndFill(prefillPlate);
+  }
+</script>
 </body>
 </html>

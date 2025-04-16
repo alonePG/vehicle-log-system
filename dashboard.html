@@ -53,11 +53,18 @@
     .mode-switch button.active {
       font-weight: bold;
     }
+    .logo {
+      display: block;
+      margin: 0 auto 1rem auto;
+      max-width: 120px;
+      height: auto;
+    }
   </style>
 </head>
 <body>
   <div class="dashboard">
     <div class="header">
+      <img src="https://i.imgur.com/QEBYa5H.png" class="logo" alt="โลโก้หมู่บ้าน" />
       <h1>📋 หน้าหลักระบบบันทึกรถ</h1>
       <div class="small-label">สำหรับเจ้าหน้าที่รักษาความปลอดภัย</div>
     </div>
@@ -86,7 +93,7 @@
 
   <script>
     let currentMode = 'today';
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyeH9gI9kzC6jXQrgqBJxdg4XmMcHMSYi7OUmurBi3JnU5I5-jL3eRz40sWjFZu86NXQQ/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyOj_fPry_FyNfBCXJUqAa_IhqFqLMYTW6tTIsJBzGJxukWzHVnWkTq604-6Gp_ITdIxQ/exec"; // 👈 เปลี่ยนเป็น Script URL ของคุณ
 
     function setMode(mode) {
       currentMode = mode;
@@ -146,7 +153,7 @@
     }
 
     setMode('today');
-    setInterval(loadCarList, 60000); // โหลดใหม่ทุก 1 นาที
+    setInterval(loadCarList, 60000);
   </script>
 </body>
 </html>
