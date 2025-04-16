@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>บันทึกเวลาออก</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <audio id="successSound" preload="auto">
+    <source src="https://media.vocaroo.com/mp3/16O6YCTv88bJ" type="audio/mp3" />
+  </audio>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e9ecef;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .form-card {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: white;
+      padding: 1.5rem 1rem;
+      border-radius: 1.25rem 1.25rem 0 0;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    input.form-control {
+      font-size: 1.1rem;
+      padding: 0.75rem;
+      border-radius: 0.6rem;
+    }
+
+    button.btn {
+      font-size: 1.1rem;
+      padding: 0.75rem;
+      border-radius: 0.6rem;
+    }
+
+    #resultArea {
+      margin-top: 1.5rem;
+    }
+
+    .card-result {
+      background-color: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrapper">
+    <div class="form-card text-center">
+      <h2>📤 บันทึกเวลาออกของรถ</h2>
+      <p>ค้นหาทะเบียนรถที่ยังไม่ออก</p>
+      <form id="checkoutForm" class="row g-2">
+        <div class="col-12">
+          <input type="text" id="searchPlate" class="form-control" placeholder="กรอกทะเบียนรถ เช่น กข1234" required />
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary w-100">🔍 ค้นหา</button>
+        </div>
+      </form>
+      <div id="resultArea" class="w-100"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("checkoutForm");
+    const resultArea = document.getElementById("resultArea");
+    const successSound = document.getElementById("successSound");
+
+    // ดึง query string จาก URL เช่น ?plate=กข1234
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    async function fetchAndFill(plate) {
+      if (!plate) return;
+      document.getElementById("searchPlate").value = plate;
+
+      resultArea.innerHTML = `<div class='alert alert-info mt-3'>🔄 กำลังค้นหาข้อมูล...</div>`;
+
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbz65_-A329UbJHkRcotUC16USTZCaYtAcl5QlT8k2m33EDe7sDdme5sOV7jjvTr8ZpG/exec?plate=" + encodeURIComponent(plate));
+        const data = await res.json();
+
+        if (!data || !data.rowIndex) {
+          resultArea.innerHTML = `<div class='alert alert-danger mt-3'>❌ ไม่พบทะเบียนนี้หรือออกแล้ว</div>`;
+          return;
+        }
+
+        const dateObj = new Date(data.timeIn);
+        const dateStr = dateObj.toLocaleDateString("th-TH", {
+          year: "numeric", month: "short", day: "numeric"
+        });
+        const timeStr = dateObj.toLocaleTimeString("th-TH", {
+          hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+        });
+        const formattedTimeIn = `${dateStr} เวลา ${timeStr}`;
+
+        resultArea.innerHTML = `
+          <div class='card-result mt-3 text-start'>
+            <h5>🚗 ทะเบียน: <strong>${data.plate}</strong></h5>
+            <p>🏠 บ้านเลขที่: ${data.house}<br>🎯 วัตถุประสงค์: ${data.purpose}<br>⏱️ เวลาเข้า: ${formattedTimeIn}</p>
+            <button class='btn btn-success w-100 mt-2' onclick='confirmCheckout(${data.rowIndex})'>✅ บันทึกเวลาออก</button>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const plate = document.getElementById("searchPlate").value.trim();
+      if (!plate) return;
+      fetchAndFill(plate);
+    });
+
+    async function confirmCheckout(rowIndex) {
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbz65_-A329UbJHkRcotUC16USTZCaYtAcl5QlT8k2m33EDe7sDdme5sOV7jjvTr8ZpG/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ action: "checkout", row: rowIndex })
+        });
+
+        const result = await res.text();
+        resultArea.innerHTML = `<div class='alert alert-success mt-3'>${result}</div>`;
+
+        successSound.play().catch(() => {
+          console.warn("ไม่สามารถเล่นเสียงแจ้งเตือนได้ (อาจถูกเบราว์เซอร์บล็อก)");
+        });
+      } catch (err) {
+        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
+      }
+    }
+
+    // เรียกอัตโนมัติถ้ามีพารามิเตอร์ plate
+    const prefillPlate = getQueryParam("plate");
+    if (prefillPlate) {
+      fetchAndFill(prefillPlate);
+    }
+  </script>
+</body>
+</html>
