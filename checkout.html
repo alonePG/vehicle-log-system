@@ -15,13 +15,11 @@
       background-color: #e9ecef;
       font-family: 'Segoe UI', Tahoma, sans-serif;
     }
-
     .app-wrapper {
       width: 100%;
       max-width: 420px;
       margin: 0 auto;
     }
-
     .form-card {
       height: 100vh;
       display: flex;
@@ -32,35 +30,29 @@
       border-radius: 1.25rem 1.25rem 0 0;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
-
     h2 {
       font-size: 1.4rem;
       margin-bottom: 0.5rem;
       color: #333;
     }
-
     p {
       margin-bottom: 1.5rem;
       font-size: 0.95rem;
       color: #666;
     }
-
     input.form-control {
       font-size: 1.1rem;
       padding: 0.75rem;
       border-radius: 0.6rem;
     }
-
     button.btn {
       font-size: 1.1rem;
       padding: 0.75rem;
       border-radius: 0.6rem;
     }
-
     #resultArea {
       margin-top: 1.5rem;
     }
-
     .card-result {
       background-color: #fff;
       border-radius: 1rem;
@@ -74,6 +66,7 @@
     <div class="form-card text-center">
       <h2>📤 บันทึกเวลาออกของรถ</h2>
       <p>ค้นหาทะเบียนรถที่ยังไม่ออก</p>
+
       <form id="checkoutForm" class="row g-2">
         <div class="col-12">
           <input type="text" id="searchPlate" class="form-control" placeholder="กรอกทะเบียนรถ เช่น กข1234" required />
@@ -82,91 +75,97 @@
           <button type="submit" class="btn btn-primary w-100">🔍 ค้นหา</button>
         </div>
       </form>
+
       <div id="resultArea" class="w-100"></div>
     </div>
   </div>
 
-<script>
-  const form = document.getElementById("checkoutForm");
-  const resultArea = document.getElementById("resultArea");
-  const successSound = document.getElementById("successSound");
+  <script>
+    const form = document.getElementById("checkoutForm");
+    const resultArea = document.getElementById("resultArea");
+    const successSound = document.getElementById("successSound");
 
-  function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-  }
-
-  async function fetchAndFill(plate) {
-    if (!plate) return;
-    document.getElementById("searchPlate").value = plate;
-
-    resultArea.innerHTML = `<div class='alert alert-info mt-3'>🔄 กำลังค้นหาข้อมูล...</div>`;
-
-    try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwZHJgvLWTylrOJt_wiF78ewOHWdf0YumfCmyArv-XMqXY7sCrIEAvtcF2tu5wh7hxQ/exec?plate=" + encodeURIComponent(plate));
-      const data = await res.json();
-
-      if (!data || !data.rowIndex) {
-        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>❌ ไม่พบทะเบียนนี้หรือออกแล้ว</div>`;
-        return;
-      }
-
-      const dateObj = new Date(data.timeIn);
-      const dateStr = dateObj.toLocaleDateString("th-TH", {
-        year: "numeric", month: "short", day: "numeric"
-      });
-      const timeStr = dateObj.toLocaleTimeString("th-TH", {
-        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
-      });
-      const formattedTimeIn = `${dateStr} เวลา ${timeStr}`;
-
-      resultArea.innerHTML = `
-        <div class='card-result mt-3 text-start'>
-          <h5>🚗 ทะเบียน: <strong>${data.plate}</strong></h5>
-          <p>🏠 บ้านเลขที่: ${data.house}<br>🎯 วัตถุประสงค์: ${data.purpose}<br>⏱️ เวลาเข้า: ${formattedTimeIn}</p>
-          <button class='btn btn-success w-100 mt-2' onclick='confirmCheckout(${data.rowIndex})'>✅ บันทึกเวลาออก</button>
-        </div>
-      `;
-    } catch (err) {
-      console.error(err);
-      resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
+    // อ่านค่า Query Parameter เช่น ?plate=...
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
     }
-  }
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const plate = document.getElementById("searchPlate").value.trim();
-    if (!plate) return;
-    fetchAndFill(plate);
-  });
+    // ค้นหาข้อมูลทะเบียน
+    async function fetchAndFill(plate) {
+      if (!plate) return;
+      document.getElementById("searchPlate").value = plate;
 
-  async function confirmCheckout(rowIndex) {
-    try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwZHJgvLWTylrOJt_wiF78ewOHWdf0YumfCmyArv-XMqXY7sCrIEAvtcF2tu5wh7hxQ/exec", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ action: "checkout", row: rowIndex })
-      });
+      resultArea.innerHTML = `<div class='alert alert-info mt-3'>🔄 กำลังค้นหาข้อมูล...</div>`;
 
-      const result = await res.text();
-      const isError = result.startsWith("🚫") || result.startsWith("เกิดข้อผิดพลาด");
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwZHJgvLWTylrOJt_wiF78ewOHWdf0YumfCmyArv-XMqXY7sCrIEAvtcF2tu5wh7hxQ/exec?plate=" + encodeURIComponent(plate));
+        const data = await res.json();
 
-      resultArea.innerHTML = `<div class='alert alert-${isError ? "danger" : "success"} mt-3'>${result}</div>`;
+        if (!data || !data.rowIndex) {
+          resultArea.innerHTML = `<div class='alert alert-danger mt-3'>❌ ไม่พบทะเบียนนี้หรือออกแล้ว</div>`;
+          return;
+        }
 
-      if (!isError) {
-        successSound.currentTime = 0;
-        successSound.play().catch(() => {});
-        setTimeout(() => location.href = "dashboard.html", 2000);
+        const dateObj = new Date(data.timeIn);
+        const dateStr = dateObj.toLocaleDateString("th-TH", {
+          year: "numeric", month: "short", day: "numeric"
+        });
+        const timeStr = dateObj.toLocaleTimeString("th-TH", {
+          hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+        });
+        const formattedTimeIn = `${dateStr} เวลา ${timeStr}`;
+
+        resultArea.innerHTML = `
+          <div class='card-result mt-3 text-start'>
+            <h5>🚗 ทะเบียน: <strong>${data.plate}</strong></h5>
+            <p>🏠 บ้านเลขที่: ${data.house}<br>🎯 วัตถุประสงค์: ${data.purpose}<br>⏱️ เวลาเข้า: ${formattedTimeIn}</p>
+            <button class='btn btn-success w-100 mt-2' onclick='confirmCheckout(${data.rowIndex})'>✅ บันทึกเวลาออก</button>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
       }
-    } catch (err) {
-      resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
     }
-  }
 
-  const prefillPlate = getQueryParam("plate");
-  if (prefillPlate) {
-    fetchAndFill(prefillPlate);
-  }
-</script>
+    // ฟอร์มค้นหา
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const plate = document.getElementById("searchPlate").value.trim();
+      if (!plate) return;
+      fetchAndFill(plate);
+    });
+
+    // ฟังก์ชันบันทึกเวลาออก
+    async function confirmCheckout(rowIndex) {
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwZHJgvLWTylrOJt_wiF78ewOHWdf0YumfCmyArv-XMqXY7sCrIEAvtcF2tu5wh7hxQ/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ action: "checkout", row: rowIndex })
+        });
+
+        const result = await res.text();
+        const isError = result.startsWith("🚫") || result.startsWith("เกิดข้อผิดพลาด");
+
+        resultArea.innerHTML = `<div class='alert alert-${isError ? "danger" : "success"} mt-3'>${result}</div>`;
+
+        if (!isError) {
+          successSound.currentTime = 0;
+          successSound.play().catch(() => {});
+          setTimeout(() => location.href = "dashboard.html", 2000);
+        }
+      } catch (err) {
+        resultArea.innerHTML = `<div class='alert alert-danger mt-3'>เกิดข้อผิดพลาด: ${err.message}</div>`;
+      }
+    }
+
+    // โหลดทะเบียนล่วงหน้าหากมีพารามิเตอร์ใน URL
+    const prefillPlate = getQueryParam("plate");
+    if (prefillPlate) {
+      fetchAndFill(prefillPlate);
+    }
+  </script>
 </body>
 </html>
